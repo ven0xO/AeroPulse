@@ -1,3 +1,4 @@
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,3 +10,8 @@ class Settings(BaseSettings):
     )
     app_name: str = "AeroPulse"
     debug: bool = False
+    db_host: str = "127.0.0.1"
+    db_port: int = 5432
+    db_name: str = "aeropulse"
+    db_user: str = "aeropulse_app"
+    db_password: SecretStr
