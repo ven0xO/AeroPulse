@@ -3,7 +3,7 @@ name = "AeroPulse"
 version = "0.1.0"
 description = "Backend for drone fleet management and telemetry collection, processing, and visualization."
 requires-python = ">=3.13"
-dependencies = ["fastapi", "uvicorn", "pydantic-settings", "sqlalchemy>=2.0,<3", "psycopg[binary]>=3,<4", "alembic>=1.16,<2"]
+dependencies = ["fastapi", "uvicorn", "pydantic-settings", "sqlalchemy>=2.0,<3", "psycopg[binary]>=3,<4", "alembic>=1.16,<2", "email-validator"]
 
 [build-system]
 requires = ["setuptools>=77.0.3"]
@@ -20,3 +20,6 @@ line-length = 88
 python_version = "3.13"
 strict = true
 plugins = ["pydantic.mypy"]
+
+[tool.setuptools.packages.find]
+include = ["app", "app.*"]
