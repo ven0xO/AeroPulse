@@ -1,6 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from psycopg.errors import UniqueViolation
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_session
@@ -16,7 +18,21 @@ def post_user(
 ) -> UserRead:
     user = User(email=data.email)
     session.add(user)
-    session.commit()
+
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        if (
+            isinstance(exc.orig, UniqueViolation)
+            and exc.orig.diag.constraint_name == "users_email_key"
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="Email is already registered",
+            ) from exc
+        else:
+            raise
 
     session.refresh(user)
 
