@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_session
 from app.drones.models import Drone
-from app.drones.schemas import DroneCreate, DroneRead
+from app.drones.schemas import DroneCreate, DroneRead, DroneUpdate
 from app.users.models import User
 
 router = APIRouter(prefix="/drones", tags=["drones"])
@@ -56,3 +56,34 @@ def get_drone(
         raise HTTPException(status_code=404, detail="Drone not found")
 
     return DroneRead.model_validate(drone)
+
+
+@router.patch("/{drone_id}")
+def patch_drone(
+    session: Annotated[Session, Depends(get_session)], drone_id: int, data: DroneUpdate
+) -> DroneRead:
+    drone = session.get(Drone, drone_id)
+    if drone is None:
+        raise HTTPException(status_code=404, detail="Drone not found")
+
+    changes = data.model_dump(exclude_unset=True)
+
+    if None in changes.values():
+        raise HTTPException(status_code=422, detail="Updated fields cannot be null")
+
+    if "name" in changes:
+        drone.name = changes["name"]
+    if "owner_id" in changes:
+        owner = session.get(User, data.owner_id)
+        if owner is None:
+            raise HTTPException(status_code=404, detail="Owner not found")
+        drone.owner_id = changes["owner_id"]
+
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise
+
+    response = DroneRead.model_validate(drone)
+    return response

@@ -12,3 +12,8 @@ class DroneRead(BaseModel):
     owner_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DroneUpdate(BaseModel):
+    name: str | None = None
+    owner_id: int | None = None
