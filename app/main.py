@@ -3,6 +3,7 @@ import logging
 from fastapi import FastAPI
 
 from app.config import Settings
+from app.drones.router import router as drones_router
 from app.logging_config import configure_logging
 from app.users.router import router as users_router
 
@@ -12,6 +13,7 @@ logger = logging.getLogger(__name__)
 settings = Settings()
 app = FastAPI(title=settings.app_name, debug=settings.debug)
 app.include_router(users_router)
+app.include_router(drones_router)
 
 logger.info("Application configured: %s", settings.app_name)
 
