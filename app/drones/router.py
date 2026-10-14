@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -31,4 +32,16 @@ def post_drone(
     session.refresh(drone)
 
     response = DroneRead.model_validate(drone)
+    return response
+
+
+@router.get("", status_code=200)
+def get_drones(session: Annotated[Session, Depends(get_session)]) -> list[DroneRead]:
+    statement = select(Drone).order_by(Drone.id)
+    drones = session.scalars(statement).all()
+    response: list[DroneRead] = []
+
+    for drone in drones:
+        response.append(DroneRead.model_validate(drone))
+
     return response
