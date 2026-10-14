@@ -87,3 +87,18 @@ def patch_drone(
 
     response = DroneRead.model_validate(drone)
     return response
+
+
+@router.delete("/{drone_id}", status_code=204)
+def delete_drone(
+    session: Annotated[Session, Depends(get_session)], drone_id: int
+) -> None:
+    drone = session.get(Drone, drone_id)
+    if drone is None:
+        raise HTTPException(status_code=404, detail="Drone not found")
+    session.delete(drone)
+    try:
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        raise
