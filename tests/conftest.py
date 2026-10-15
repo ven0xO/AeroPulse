@@ -36,7 +36,10 @@ def db_session(db_connection: Connection) -> Iterator[Session]:
 @pytest.fixture
 def client(db_session: Session) -> Iterator[TestClient]:
     def test_get_session() -> Iterator[Session]:
-        yield db_session
+        try:
+            yield db_session
+        finally:
+            db_session.rollback()
 
     app.dependency_overrides[get_session] = test_get_session
 
