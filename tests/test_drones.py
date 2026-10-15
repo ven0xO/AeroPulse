@@ -102,3 +102,28 @@ def test_get_drone(client: TestClient, db_session: Session) -> None:
 
     response = client.get("/drones/abc")
     assert response.status_code == 422
+
+
+def test_patch_drone(client: TestClient, db_session: Session) -> None:
+    response = client.post("/users", json={"email": "test@xyz.com"})
+    assert response.status_code == 201
+
+    owner_id = response.json()["id"]
+    owner = db_session.get(User, owner_id)
+    assert owner is not None
+
+    response = client.post("/drones", json={"name": "test1", "owner_id": owner_id})
+    assert response.status_code == 201
+    created_drone = response.json()
+    drone_id = created_drone["id"]
+
+    response = client.patch(f"/drones/{drone_id}", json={"name": "new_test1"})
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": drone_id,
+        "name": "new_test1",
+        "owner_id": owner_id,
+    }
+    patched_drone = db_session.get(Drone, drone_id)
+    assert patched_drone is not None
+    assert patched_drone.name == "new_test1"
