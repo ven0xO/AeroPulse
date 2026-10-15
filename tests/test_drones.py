@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.drones.models import Drone
 from app.users.models import User
 
 
@@ -72,3 +73,32 @@ def test_get_drones(client: TestClient, db_session: Session) -> None:
     response = client.get("/drones")
     assert response.status_code == 200
     assert response.json() == [first_drone, second_drone]
+
+
+def test_get_drone(client: TestClient, db_session: Session) -> None:
+    response = client.post("/users", json={"email": "test@xyz.com"})
+    assert response.status_code == 201
+
+    owner_id = response.json()["id"]
+    owner = db_session.get(User, owner_id)
+    assert owner is not None
+
+    response = client.post("/drones", json={"name": "test1", "owner_id": owner_id})
+    assert response.status_code == 201
+    created_drone = response.json()
+    drone_id = created_drone["id"]
+
+    response = client.get(f"/drones/{drone_id}")
+    assert response.status_code == 200
+    assert response.json() == created_drone
+
+    drone = db_session.get(Drone, drone_id)
+    assert drone is not None
+    db_session.delete(drone)
+    db_session.commit()
+
+    response = client.get(f"/drones/{drone_id}")
+    assert response.status_code == 404
+
+    response = client.get("/drones/abc")
+    assert response.status_code == 422
