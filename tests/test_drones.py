@@ -45,3 +45,30 @@ def test_create_drone_owner_not_found(client: TestClient, db_session: Session) -
     response = client.post("/drones", json={"name": "test1", "owner_id": owner_id})
     assert response.status_code == 404
     assert response.json()["detail"] == "Owner not found"
+
+
+def test_get_drones_empty(client: TestClient) -> None:
+    response = client.get("/drones")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_get_drones(client: TestClient, db_session: Session) -> None:
+    response = client.post("/users", json={"email": "test@xyz.com"})
+    assert response.status_code == 201
+
+    owner_id = response.json()["id"]
+    owner = db_session.get(User, owner_id)
+    assert owner is not None
+
+    response = client.post("/drones", json={"name": "test1", "owner_id": owner_id})
+    assert response.status_code == 201
+    first_drone = response.json()
+
+    response = client.post("/drones", json={"name": "test2", "owner_id": owner_id})
+    assert response.status_code == 201
+    second_drone = response.json()
+
+    response = client.get("/drones")
+    assert response.status_code == 200
+    assert response.json() == [first_drone, second_drone]
